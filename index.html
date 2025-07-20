@@ -1,14 +1,14 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Whack-a-Mole Game</title>
+  <title>Whack-a-Mole Challenge</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #cc9966;
       text-align: center;
-      background: #cc9966; /* orange-brown */
       padding: 30px;
     }
     h1 {
@@ -24,6 +24,7 @@
       grid-template-columns: repeat(3, 120px);
       gap: 15px;
       justify-content: center;
+      margin-bottom: 30px;
     }
     .hole {
       width: 120px;
@@ -31,9 +32,8 @@
       background: #5c3a1d;
       border-radius: 50%;
       position: relative;
-      cursor: pointer;
-      box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
       overflow: hidden;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.4);
     }
     .mole {
       position: absolute;
@@ -42,15 +42,21 @@
       transform: translateX(-50%) translateY(100%);
       width: 100px;
       height: 100px;
-      transition: transform 0.3s ease;
       display: none;
+      transition: transform 0.2s ease;
     }
     .mole.show {
       display: block;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* Vivid colors */
+    .brown svg circle:first-child { fill: #8B4513; }
+    .red svg circle:first-child { fill: #e63946; }
+    .gold svg circle:first-child { fill: #FFD700; }
+
     #start {
-      margin-top: 25px;
+      margin-top: 20px;
       padding: 10px 20px;
       font-size: 18px;
       background: #3d2b1f;
@@ -63,31 +69,44 @@
       background: #888;
       cursor: not-allowed;
     }
+
+    #chartContainer {
+      width: 80%;
+      margin: 0 auto;
+      margin-top: 40px;
+    }
   </style>
 </head>
 <body>
 
-
-<h1>Whack-a-Mole!</h1>
+<h1>Whack-a-Mole Challenge</h1>
 <div id="score">Score: 0</div>
 <button id="start">Start Game</button>
 
-
 <div id="game"></div>
 
+<div id="chartContainer">
+  <canvas id="scoreChart"></canvas>
+</div>
 
 <script>
   const game = document.getElementById("game");
   const scoreDisplay = document.getElementById("score");
   const startBtn = document.getElementById("start");
 
+  const moleTypes = [
+    { class: "brown", points: 1 },
+    { class: "red", points: -1 },
+    { class: "gold", points: 3 }
+  ];
 
   let score = 0;
-  let moleTimeout;
-  let moleInterval;
-  let currentMole = null;
   let holes = [];
-
+  let currentMole = null;
+  let gameInterval;
+  let popupSpeed = 1300;  // Slower than before
+  let chart;
+  let scoreData = [];
 
   const moleSVG = `
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -104,89 +123,112 @@
     </svg>
   `;
 
+  function createGameGrid() {
+    game.innerHTML = "";
+    holes = [];
+    for (let i = 0; i < 9; i++) {
+      const hole = document.createElement("div");
+      hole.classList.add("hole");
 
-  // Create 9 holes
-  for (let i = 0; i < 9; i++) {
-    const hole = document.createElement("div");
-    hole.classList.add("hole");
+      const moleDiv = document.createElement("div");
+      moleDiv.classList.add("mole");
+      moleDiv.innerHTML = moleSVG;
+      hole.appendChild(moleDiv);
 
+      hole.addEventListener("click", () => {
+        if (moleDiv.classList.contains("show")) {
+          const type = moleTypes.find(t => moleDiv.classList.contains(t.class));
+          score += type.points;
+          updateScore();
+          hideMole(moleDiv);
+        }
+      });
 
-    const moleDiv = document.createElement("div");
-    moleDiv.classList.add("mole");
-    moleDiv.innerHTML = moleSVG;
-    hole.appendChild(moleDiv);
-
-
-    hole.addEventListener("click", () => {
-      if (moleDiv.classList.contains("show")) {
-        score++;
-        scoreDisplay.textContent = "Score: " + score;
-        hideMole(moleDiv);
-      }
-    });
-
-
-    game.appendChild(hole);
-    holes.push(hole);
+      game.appendChild(hole);
+      holes.push(hole);
+    }
   }
 
-
-  function showMole(mole) {
-    mole.classList.add("show");
+  function updateScore() {
+    scoreDisplay.textContent = "Score: " + score;
+    scoreData.push(score);
+    chart.data.labels.push(scoreData.length);
+    chart.data.datasets[0].data.push(score);
+    chart.update();
   }
-
-
-  function hideMole(mole) {
-    mole.classList.remove("show");
-  }
-
 
   function getRandomHole() {
-    const index = Math.floor(Math.random() * holes.length);
-    return holes[index].querySelector(".mole");
+    return holes[Math.floor(Math.random() * holes.length)].querySelector(".mole");
   }
 
-
-  function molePopUp() {
-    if (currentMole) {
-      hideMole(currentMole);
-    }
+  function showRandomMole() {
+    if (currentMole) hideMole(currentMole);
     const mole = getRandomHole();
+    const type = moleTypes[Math.floor(Math.random() * moleTypes.length)];
+
+    mole.className = `mole show ${type.class}`;
     currentMole = mole;
-    showMole(mole);
 
-
-    moleTimeout = setTimeout(() => {
-      hideMole(mole);
-      currentMole = null;
-    }, 800);
+    setTimeout(() => {
+      if (mole === currentMole) hideMole(mole);
+    }, popupSpeed - 300);
   }
 
+  function hideMole(mole) {
+    mole.classList.remove("show", "brown", "red", "gold");
+    currentMole = null;
+  }
 
   function startGame() {
     score = 0;
-    scoreDisplay.textContent = "Score: 0";
+    scoreData = [];
+    popupSpeed = 1300;
+    updateScore();
     startBtn.disabled = true;
+    createGameGrid();
+    showRandomMole();
 
-
-    molePopUp();
-    moleInterval = setInterval(molePopUp, 1000);
-
+    gameInterval = setInterval(() => {
+      showRandomMole();
+      if (popupSpeed > 600) popupSpeed -= 30; // Still gets harder
+    }, popupSpeed);
 
     setTimeout(() => {
-      clearInterval(moleInterval);
-      clearTimeout(moleTimeout);
+      clearInterval(gameInterval);
       if (currentMole) hideMole(currentMole);
-      currentMole = null;
       startBtn.disabled = false;
-      alert("Game over! Your final score is: " + score);
+      alert("Game Over! Final score: " + score);
     }, 30000);
   }
 
-
   startBtn.addEventListener("click", startGame);
-</script>
 
+  // Chart setup
+  const ctx = document.getElementById("scoreChart").getContext("2d");
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Score Over Time',
+        data: [],
+        fill: false,
+        borderColor: '#3d2b1f',
+        backgroundColor: '#3d2b1f',
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'Mole Hits' } },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  createGameGrid();
+</script>
 
 </body>
 </html>
