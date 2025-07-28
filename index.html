@@ -2,37 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Whack-a-Mole with Side Description & High Score</title>
+<title>Kawaii Whack-a-Mole Pop-up From Hole</title>
 <style>
-  /* Orange background */
   body {
-    background: #f08c28; /* warm orange */
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #3e2f25;
+    background: #ffe6cc;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    color: #5a4632;
     margin: 0;
     height: 100vh;
-    overflow-x: hidden;
     display: flex;
-    justify-content: center; /* center horizontally */
-    align-items: center; /* center vertically */
+    justify-content: center;
+    align-items: center;
   }
-
-
-  /* Container for game */
+  .container {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+  }
   .game-area {
     text-align: center;
   }
-
-
   h1 {
     margin-bottom: 20px;
     font-weight: 700;
+    font-family: 'Baloo 2', cursive;
+    color: #7b5e3c;
   }
   .scoreboard {
-    font-size: 1.6em;
+    font-size: 1.8em;
     margin-bottom: 30px;
-    font-weight: 600;
-    color: #5a4534;
+    font-weight: 700;
+    color: #7b5e3c;
   }
   .grid {
     display: grid;
@@ -43,196 +43,141 @@
   .hole {
     width: 100px;
     height: 100px;
-    background: #b28b5c;
+    background: #cbb394;
     border-radius: 50%;
     position: relative;
-    overflow: hidden;
-    box-shadow: inset 0 0 10px #8f6f43;
+    overflow: hidden;  /* IMPORTANT: hide mole outside hole */
+    box-shadow: inset 0 0 15px #a9936f;
   }
   .mole {
     position: absolute;
-    width: 78px;
-    height: 68px;
-    border-radius: 50% / 60%;
-    top: 110%;
+    width: 80px;
+    height: 70px;
+    bottom: -70px; /* start fully hidden below hole */
     left: 50%;
     transform: translateX(-50%);
     cursor: pointer;
-    transition: top 0.35s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding-top: 8px;
-    box-shadow: inset 5px 3px 6px, inset -5px -3px 6px;
+    transition: bottom 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    user-select: none;
+    z-index: 10;
   }
   .mole.up {
-    top: 12px;
+    bottom: 12px; /* visible position inside hole */
   }
-  .brown {
-    background: #6b4f3b;
-    box-shadow:
-      inset 5px 3px 6px #543d29,
-      inset -5px -3px 6px #7a614b;
+  .mole svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
-  .gold {
-    background: #d4af37;
-    box-shadow:
-      inset 5px 3px 8px #a77f0e,
-      inset -5px -3px 8px #f2d024;
+  /* Colors for mole types */
+  .mole.brown svg .moleBody {
+    fill: #6b4f3b;
   }
-  .red {
-    background: #c94c4c;
-    box-shadow:
-      inset 5px 3px 6px #8a2b2b,
-      inset -5px -3px 6px #d95e5e;
+  .mole.brown svg .eye {
+    fill: #3d2a1a;
   }
-  .head {
-    position: relative;
-    width: 58px;
-    height: 48px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 50% / 65%;
-    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.15);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 6px;
+  .mole.brown svg .cheek {
+    fill: #f7c6a3;
+    opacity: 0.5;
   }
-  .eye {
-    width: 8px;
-    height: 8px;
-    background: #2c2116;
-    border-radius: 50%;
-    margin: 0 6px;
-    box-shadow: 0 0 2px #00000088;
-  }
-  .nose {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    width: 14px;
-    height: 10px;
-    background: #4a3624;
-    border-radius: 50% / 40%;
-    transform: translateX(-50%);
-    box-shadow: inset 0 2px 3px #3a2917;
-  }
-  .paws {
-    width: 78px;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px;
-  }
-  .paw {
-    width: 14px;
-    height: 18px;
-    background: rgba(0,0,0,0.15);
-    border-radius: 30% / 60%;
-    box-shadow: inset 0 2px 3px rgba(0,0,0,0.3);
-  }
-  button {
-    margin-top: 30px;
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #5a4534;
-    background-color: #d7c3a3;
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(171,149,116,0.3);
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background-color: #c7b38a;
+  .mole.brown svg .nose {
+    fill: #5d4429;
   }
 
 
-  /* Description side - fixed on right */
-  .description-container {
-    position: fixed;
-    right: 0;
-    top: 0;
-    height: 100vh;
-    width: 320px;
-    background: #fff9f0;
-    border-left: 4px solid #d7c3a3;
-    padding: 30px 25px;
-    box-shadow: -4px 0 12px rgba(171,149,116,0.25);
-    font-size: 1em;
-    color: #5a4534;
+  .mole.red svg .moleBody {
+    fill: #c94c4c;
+  }
+  .mole.red svg .eye {
+    fill: #5a2b2b;
+  }
+  .mole.red svg .cheek {
+    fill: #f9a6a6;
+    opacity: 0.5;
+  }
+  .mole.red svg .nose {
+    fill: #803838;
+  }
+
+
+  .mole.gold svg .moleBody {
+    fill: #d4af37;
+  }
+  .mole.gold svg .eye {
+    fill: #5b4d1a;
+  }
+  .mole.gold svg .cheek {
+    fill: #f8e79e;
+    opacity: 0.5;
+  }
+  .mole.gold svg .nose {
+    fill: #7e6f1a;
+  }
+
+
+  /* Sidebar */
+  .description {
+    max-width: 300px;
+    background: #fff8f0;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 3px 3px 15px rgba(0,0,0,0.1);
+    font-size: 1rem;
+    color: #7b5e3c;
     line-height: 1.5;
-    overflow-y: auto;
   }
-  .description-container h2 {
+  .description h3 {
     margin-top: 0;
   }
-  .description-container ul {
+  .description ul {
     padding-left: 20px;
-    margin-top: 8px;
   }
-  .description-container li {
+  .description li {
     margin-bottom: 8px;
   }
-  .description-container span.gold {
-    color: #d4af37;
-    font-weight: 700;
-  }
-  .description-container span.brown {
-    color: #6b4f3b;
-    font-weight: 700;
-  }
-  .description-container span.red {
-    color: #c94c4c;
-    font-weight: 700;
-  }
-  .high-score {
-    margin-top: 20px;
-    padding: 10px;
-    border-top: 2px solid #d7c3a3;
-    font-weight: 700;
-    font-size: 1.1em;
-    color: #3e2f25;
-  }
+  .description span.gold { color: #d4af37; font-weight: 700; }
+  .description span.brown { color: #6b4f3b; font-weight: 700; }
+  .description span.red { color: #c94c4c; font-weight: 700; }
 
 
-  /* Hide description scrollbar on Webkit */
-  .description-container::-webkit-scrollbar {
+  /* Particle style */
+  .particle {
+    position: absolute;
     width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 1;
+    animation: floatUp 800ms forwards;
   }
-  .description-container::-webkit-scrollbar-thumb {
-    background-color: #d7c3a3;
-    border-radius: 4px;
+  @keyframes floatUp {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-40px) scale(0.3);
+      opacity: 0;
+    }
   }
 </style>
 </head>
 <body>
-  <div class="game-area">
-    <h1>Whack-a-Mole</h1>
-    <div class="scoreboard">Score: <span id="score">0</span></div>
-    <div class="grid" id="grid"></div>
-    <button onclick="startGame()">Start Game</button>
-  </div>
-
-
-  <div class="description-container" id="description">
-    <h2>How to Play</h2>
-    <ul>
-      <li>Click the <strong>Start Game</strong> button to begin.</li>
-      <li>Moles pop up from holes in different colors:</li>
+  <div class="container">
+    <div class="game-area">
+      <h1>Kawaii Whack-a-Mole</h1>
+      <div class="scoreboard">Score: <span id="score">0</span></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="description">
+      <h3>How to Play</h3>
       <ul>
+        <li>Click the mole as it pops up!</li>
         <li><span class="gold">Gold mole:</span> +3 points</li>
         <li><span class="brown">Brown mole:</span> +1 point</li>
         <li><span class="red">Red mole:</span> -1 point</li>
       </ul>
-      <li>Click on a mole while it's visible to score or lose points.</li>
-      <li>Your goal is to get the highest score possible!</li>
-    </ul>
-
-
-    <div class="high-score">
-      High Score: <span id="highScore">0</span>
+      <p>Try to get the highest score possible!</p>
     </div>
   </div>
 
@@ -240,92 +185,89 @@
 <script>
   const grid = document.getElementById("grid");
   const scoreDisplay = document.getElementById("score");
-  const highScoreDisplay = document.getElementById("highScore");
-
-
   let score = 0;
-  let highScore = 0;
-  let gameInterval;
-  let moleTimeout;
-  let lastHole = null;
+  let lastHole;
 
 
   const moleTypes = [
-    { className: 'gold', points: 3 },
-    { className: 'brown', points: 1 },
-    { className: 'red', points: -1 }
+    { className: "gold", points: 3, colors: ['#f9e88f', '#d4af37'] },
+    { className: "brown", points: 1, colors: ['#6b4f3b', '#a07c55'] },
+    { className: "red", points: -1, colors: ['#c94c4c', '#e07b7b'] },
   ];
 
 
-  function createGrid() {
-    grid.innerHTML = "";
-    for (let i = 0; i < 9; i++) {
-      const hole = document.createElement("div");
-      hole.classList.add("hole");
+  function createMole() {
+    const mole = document.createElement("div");
+    mole.classList.add("mole");
 
 
-      const mole = document.createElement("div");
-      mole.classList.add("mole");
-      mole.classList.add('brown'); // default color
+    const chosenType = moleTypes[Math.floor(Math.random() * moleTypes.length)];
+    mole.classList.add(chosenType.className);
 
 
-      const head = document.createElement("div");
-      head.classList.add("head");
+    mole.innerHTML = `
+      <svg viewBox="0 0 80 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Body + head combined -->
+        <ellipse class="moleBody" cx="40" cy="40" rx="35" ry="30" />
+        <!-- Rounded ears as part of body shape -->
+        <ellipse class="moleBody" cx="15" cy="20" rx="12" ry="15" />
+        <ellipse class="moleBody" cx="65" cy="20" rx="12" ry="15" />
+        <!-- Cheeks -->
+        <circle class="cheek" cx="22" cy="50" r="7" />
+        <circle class="cheek" cx="58" cy="50" r="7" />
+        <!-- Eyes with sparkle -->
+        <circle class="eye" cx="27" cy="33" r="7" />
+        <circle class="eye" cx="53" cy="33" r="7" />
+        <circle cx="31" cy="28" r="3" fill="white" />
+        <circle cx="57" cy="28" r="3" fill="white" />
+        <!-- Nose -->
+        <ellipse class="nose" cx="40" cy="43" rx="6" ry="4" />
+        <!-- Smile -->
+        <path d="M 30 50 Q 40 60 50 50" stroke="#7b5e3c" stroke-width="2" fill="none" />
+      </svg>
+    `;
 
 
-      const eyeLeft = document.createElement("div");
-      eyeLeft.classList.add("eye");
-      const eyeRight = document.createElement("div");
-      eyeRight.classList.add("eye");
+    mole.addEventListener("click", (e) => {
+      if (!mole.classList.contains("up")) return;
 
 
-      head.appendChild(eyeLeft);
-      head.appendChild(eyeRight);
+      score += chosenType.points;
+      if (score < 0) score = 0;
+      scoreDisplay.textContent = score;
+      mole.classList.remove("up");
 
 
-      const nose = document.createElement("div");
-      nose.classList.add("nose");
-      head.appendChild(nose);
+      spawnParticles(mole, chosenType.colors);
+    });
 
 
-      const paws = document.createElement("div");
-      paws.classList.add("paws");
-      const pawLeft = document.createElement("div");
-      pawLeft.classList.add("paw");
-      const pawRight = document.createElement("div");
-      pawRight.classList.add("paw");
-      paws.appendChild(pawLeft);
-      paws.appendChild(pawRight);
+    return mole;
+  }
 
 
-      mole.appendChild(head);
-      mole.appendChild(paws);
+  function spawnParticles(mole, colors) {
+    const hole = mole.parentElement;
+    for (let i = 0; i < 8; i++) {
+      const particle = document.createElement("div");
+      particle.classList.add("particle");
+      particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
 
 
-      mole.addEventListener("click", () => {
-        if (mole.classList.contains("up")) {
-          let moleType = moleTypes.find(type => mole.classList.contains(type.className));
-          if (!moleType) moleType = moleTypes[1]; // fallback brown
+      // Random position around mole center
+      const x = 40 + (Math.random() * 60 - 30);
+      const y = 30 + (Math.random() * 40 - 20);
+      particle.style.left = `${x}px`;
+      particle.style.top = `${y}px`;
 
 
-          score += moleType.points;
-          if (score < 0) score = 0;
-          scoreDisplay.textContent = score;
+      hole.appendChild(particle);
 
 
-          if (score > highScore) {
-            highScore = score;
-            highScoreDisplay.textContent = highScore;
-          }
-
-
-          mole.classList.remove("up");
-        }
+      // Remove particle after animation ends
+      particle.addEventListener('animationend', () => {
+        particle.remove();
       });
-
-
-      hole.appendChild(mole);
-      grid.appendChild(hole);
     }
   }
 
@@ -335,44 +277,52 @@
   }
 
 
-  function randomHole() {
-    const holes = document.querySelectorAll(".hole");
+  function randomHole(holes) {
     const idx = Math.floor(Math.random() * holes.length);
     const hole = holes[idx];
-    if (hole === lastHole) return randomHole();
+    if (hole === lastHole) return randomHole(holes);
     lastHole = hole;
     return hole;
   }
 
 
-  function showMole() {
-    const time = randomTime(700, 1200);
-    const hole = randomHole();
-    const mole = hole.querySelector(".mole");
+  function popUp() {
+    const time = randomTime(900, 1400);
+    const holes = document.querySelectorAll(".hole");
+    const hole = randomHole(holes);
 
 
-    moleTypes.forEach(type => mole.classList.remove(type.className));
+    const oldMole = hole.querySelector(".mole");
+    if (oldMole) oldMole.remove();
 
 
-    const chosenType = moleTypes[Math.floor(Math.random() * moleTypes.length)];
-    mole.classList.add(chosenType.className);
+    const mole = createMole();
+    hole.appendChild(mole);
+    // force reflow for transition to apply
+    requestAnimationFrame(() => mole.classList.add("up"));
 
 
-    mole.classList.add("up");
-    moleTimeout = setTimeout(() => {
+    setTimeout(() => {
       mole.classList.remove("up");
+      setTimeout(() => {
+        mole.remove();
+        popUp();
+      }, 400);
     }, time);
   }
 
 
-  function startGame() {
-    clearInterval(gameInterval);
-    clearTimeout(moleTimeout);
-    score = 0;
-    scoreDisplay.textContent = score;
-    createGrid();
-    gameInterval = setInterval(showMole, 1000);
+  function setupHoles() {
+    for(let i=0; i<9; i++) {
+      const hole = document.createElement("div");
+      hole.classList.add("hole");
+      grid.appendChild(hole);
+    }
   }
+
+
+  setupHoles();
+  popUp();
 </script>
 </body>
 </html>
